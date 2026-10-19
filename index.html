@@ -1,0 +1,321 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bookmix – a playlist for your book</title>
+<style>
+:root{--bg:#eef1f3;--card:#fff;--ink:#17222d;--mute:#5b6975;--line:#d3dae0;--acc:#8a5a00;--accbg:#f6e7c1;--btn:#17222d;--btnink:#fff}
+@media (prefers-color-scheme:dark){:root{--bg:#121b24;--card:#1b2733;--ink:#ebe6da;--mute:#9aa7b3;--line:#2c3a48;--acc:#e3bb55;--accbg:#3a3220;--btn:#e3bb55;--btnink:#17222d}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,Segoe UI,sans-serif}
+main{max-width:640px;margin:0 auto;padding:28px 18px 80px}
+h1,h2{font-family:Iowan Old Style,Palatino,Georgia,serif;font-weight:700;margin:0}
+h1{font-size:2.3rem;line-height:1.1}
+h2{font-size:1.25rem;margin-bottom:8px}
+.sub{color:var(--mute);margin:6px 0 24px}
+section{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px;margin-bottom:16px}
+input,select{width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);font:inherit;margin-bottom:10px}
+label{font-size:.9rem;color:var(--mute);display:block;margin-bottom:4px}
+button{font:inherit;font-weight:600;border:0;border-radius:8px;padding:11px 16px;background:var(--btn);color:var(--btnink);cursor:pointer}
+button.ghost{background:none;color:var(--ink);border:1px solid var(--line)}
+button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.row{display:flex;gap:8px;flex-wrap:wrap}
+.pick{display:flex;gap:12px;align-items:center;width:100%;text-align:left;background:none;color:var(--ink);border:1px solid var(--line);margin-bottom:8px;font-weight:400}
+.pick img,.cover{width:44px;height:64px;object-fit:cover;border-radius:3px;background:var(--line);flex:none}
+.pick b{display:block}.pick span{color:var(--mute);font-size:.9rem}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
+.chip{background:var(--accbg);color:var(--acc);border-radius:99px;padding:3px 6px 3px 12px;font-size:.88rem;font-weight:600}
+.chip button{background:none;color:inherit;padding:0 6px;font-size:1rem}
+.sec{font-family:Iowan Old Style,Palatino,Georgia,serif;font-size:1.05rem;margin:18px 0 6px;padding-bottom:4px;border-bottom:1px solid var(--line)}
+.song{display:flex;justify-content:space-between;gap:10px;padding:7px 0}
+.song small{display:block;color:var(--mute)}
+.song button{background:none;color:var(--mute);padding:0 6px}
+input[type=checkbox]{width:auto;margin:0 8px 0 0}
+.chk{display:flex;align-items:center;color:var(--ink);margin-bottom:12px}
+.sec{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.sec button{font-size:.8rem;padding:3px 10px;font-family:system-ui,sans-serif}
+.msg{color:var(--mute);margin:8px 0}.err{color:#c0392b}
+details summary{cursor:pointer;font-weight:600}
+.hint{font-size:.85rem;color:var(--mute)}
+code{background:var(--bg);padding:1px 5px;border-radius:4px;font-size:.85rem;word-break:break-all}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<main>
+<h1>Bookmix</h1>
+<p class="sub">Tell it what you're reading. Get a playlist that fits the story.</p>
+
+<section>
+  <label for="q">Book title (and author, if you like)</label>
+  <div class="row"><input id="q" placeholder="e.g. Dune Frank Herbert" style="flex:1;margin:0"><button id="go">Find book</button></div>
+  <div id="results" style="margin-top:12px"></div>
+  <div id="status" class="msg" role="status"></div>
+</section>
+
+<section id="bookbox" hidden>
+  <div class="row" style="flex-wrap:nowrap;align-items:flex-start">
+    <img id="cover" class="cover" alt="">
+    <div><h2 id="bt"></h2><div id="ba" class="hint"></div></div>
+  </div>
+  <label style="margin-top:12px">Themes (remove or add to steer the playlist)</label>
+  <div id="chips" class="chips"></div>
+  <div class="row"><input id="newtheme" placeholder="Add a theme" style="flex:1;margin:0"><button class="ghost" id="addtheme">Add</button></div>
+  <label for="upto" style="margin-top:12px">How far have you read? (optional, avoids spoilers)</label>
+  <input id="upto" placeholder="e.g. Chapter 12, or halfway">
+  <label for="len">Playlist length</label>
+  <select id="len"><option value="20">Short – 20 songs (~1.5 hrs)</option><option value="40" selected>Standard – 40 songs (~3 hrs)</option><option value="60">Long – 60 songs (~4.5 hrs)</option></select>
+  <label class="chk"><input type="checkbox" id="inst" checked>Favor songs that are easy to read to (calm, instrumental, few lyrics)</label>
+  <button id="gen">Make my playlist</button>
+</section>
+
+<section id="plbox" hidden>
+  <h2>Your playlist</h2>
+  <div id="mood" class="hint"></div>
+  <div id="songs"></div>
+  <div class="row" style="margin-top:14px">
+    <button id="exp">Save to Spotify</button>
+    <button class="ghost" id="copy">Copy as text</button>
+  </div>
+  <div id="expstatus" class="msg" role="status"></div>
+</section>
+
+<section>
+<details>
+  <summary>Settings</summary>
+  <p class="hint">Bookmix works without any keys. Everything here is optional and stored only in this browser.</p>
+  <label for="akey">Anthropic API key (optional, for higher-quality picks)</label>
+  <input id="akey" type="password" placeholder="sk-ant-...">
+  <div id="cidbox">
+    <label for="cid">Spotify Client ID (only if the site owner hasn't set one)</label>
+    <input id="cid" placeholder="Client ID from developer.spotify.com">
+    <p class="hint">Spotify redirect URI to register: <code id="ruri"></code></p>
+  </div>
+  <button class="ghost" id="save">Save settings</button>
+</details>
+</section>
+</main>
+
+<script>
+const $=id=>document.getElementById(id);
+// Paste YOUR Spotify Client ID between the quotes so visitors need no setup. It is public by design, not a secret.
+const SPOTIFY_CLIENT_ID='';
+const ls=(k,v)=>{try{if(v===undefined)return localStorage.getItem(k)||'';localStorage.setItem(k,v)}catch(e){return ''}};
+const REDIRECT=location.origin+location.pathname;
+let book=null,themes=[],songs=[],mood='',token=sessionStorage.getItem('tok')||'';
+
+$('ruri').textContent=REDIRECT;
+if(SPOTIFY_CLIENT_ID)$('cidbox').hidden=true;
+$('akey').value=ls('akey');$('cid').value=ls('cid');
+$('save').onclick=()=>{ls('akey',$('akey').value.trim());ls('cid',$('cid').value.trim());$('save').textContent='Saved';setTimeout(()=>$('save').textContent='Save settings',1500)};
+$('q').addEventListener('keydown',e=>{if(e.key==='Enter')search()});
+$('go').onclick=search;
+
+const status=(t,err)=>{$('status').textContent=t;$('status').className='msg'+(err?' err':'')};
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+async function search(){
+  const q=$('q').value.trim(); if(!q)return;
+  status('Searching…'); $('results').innerHTML='';
+  try{
+    const r=await fetch('https://www.googleapis.com/books/v1/volumes?maxResults=5&printType=books&q='+encodeURIComponent(q));
+    const j=await r.json();
+    const items=(j.items||[]).map(i=>{const v=i.volumeInfo;return{
+      title:v.title+(v.subtitle?': '+v.subtitle:''),
+      author:(v.authors||[]).join(', '),
+      cats:v.categories||[],desc:v.description||'',
+      thumb:((v.imageLinks||{}).thumbnail||'').replace('http:','https:')}});
+    if(!items.length){status('No books found. Try the title plus the author’s name.',true);return}
+    status('Pick your book:');
+    items.forEach(b=>{
+      const el=document.createElement('button');el.className='pick';
+      el.innerHTML=`<img src="${esc(b.thumb)}" alt=""><div><b>${esc(b.title)}</b><span>${esc(b.author)}</span></div>`;
+      el.onclick=()=>pick(b);$('results').appendChild(el);
+    });
+  }catch(e){status('Book search failed. Check your connection and try again.',true)}
+}
+
+async function pick(b){
+  book=b;$('results').innerHTML='';status('Looking up themes…');
+  let subs=[];
+  try{
+    const u='https://openlibrary.org/search.json?limit=1&fields=subject&title='+encodeURIComponent(b.title.split(':')[0])+'&author='+encodeURIComponent(b.author.split(',')[0]);
+    const j=await (await fetch(u)).json();
+    subs=((j.docs[0]||{}).subject||[]).filter(s=>s.length<28&&!/\d|fiction$|^reading|^large print|^open library/i.test(s));
+  }catch(e){}
+  const all=[...b.cats,...subs].map(s=>s.toLowerCase().trim());
+  themes=[...new Set(all)].slice(0,8);
+  $('bt').textContent=b.title;$('ba').textContent='by '+b.author;
+  $('cover').src=b.thumb;renderChips();
+  $('bookbox').hidden=false;$('plbox').hidden=true;status('');
+  $('bookbox').scrollIntoView({behavior:'smooth'});
+}
+
+function renderChips(){
+  $('chips').innerHTML='';
+  themes.forEach((t,i)=>{
+    const c=document.createElement('span');c.className='chip';
+    c.innerHTML=esc(t)+'<button aria-label="Remove '+esc(t)+'">×</button>';
+    c.querySelector('button').onclick=()=>{themes.splice(i,1);renderChips()};
+    $('chips').appendChild(c);
+  });
+}
+$('addtheme').onclick=()=>{const v=$('newtheme').value.trim().toLowerCase();if(v){themes.push(v);$('newtheme').value='';renderChips()}};
+
+$('gen').onclick=generate;
+async function callAI(prompt,max){
+  const key=ls('akey');
+  if(key){
+    const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'content-type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify({model:'claude-sonnet-5-5',max_tokens:max,messages:[{role:'user',content:prompt}]})});
+    if(!r.ok)throw new Error('Anthropic API error '+r.status);
+    return (await r.json()).content.map(c=>c.text||'').join('');
+  }
+  for(let a=0;a<2;a++){
+    const r=await fetch('https://text.pollinations.ai/openai',{method:'POST',headers:{'content-type':'application/json'},
+      body:JSON.stringify({model:'openai',messages:[{role:'system',content:'You are a music curator. Reply with valid JSON only.'},{role:'user',content:prompt}]})});
+    if(r.status===429&&a===0){status('The free AI is busy. Retrying in a few seconds…');await new Promise(z=>setTimeout(z,16000));continue}
+    if(!r.ok)throw new Error('free AI unavailable ('+r.status+')');
+    return (await r.json()).choices[0].message.content;
+  }
+  throw new Error('free AI is busy, try again in a minute');
+}
+const parseJSON=t=>JSON.parse(t.slice(t.indexOf('{'),t.lastIndexOf('}')+1));
+
+async function generate(){
+  $('gen').disabled=true;
+  const n=+$('len').value,inst=$('inst').checked,intro=Math.round(n*0.15);
+  const prompt=`Book: "${book.title}" by ${book.author}.
+Genres/themes: ${themes.join(', ')||'unknown'}.
+Description: ${book.desc.slice(0,900)}
+Reader's progress: ${$('upto').value||'not given'} (no spoilers past this point).
+
+Build a ${n}-song playlist. Return ONLY JSON, no markdown:
+{"mood":"one sentence on the book's overall sound","themes":["up to 6 central themes"],"songs":[{"title":"","artist":"","section":"","why":"max 12 words"}]}
+Rules: the first ${intro} songs have section "Overall vibe". The rest follow the book in reading order, 2-4 songs per section, building with the story's emotional arc (tension rises toward the climax, then releases), where section is the real chapter or part name if you know it, otherwise a story stage like "Opening", "Rising tension", "Turning point". Only include real, well-known songs that exist on Spotify; never invent titles.${inst?' Mostly choose songs that are easy to read to: calm, instrumental or sparse lyrics. Allow a few lyric-driven songs only for key moments.':''} No duplicate songs.`;
+  try{
+    status('Building your playlist… this can take up to a minute.');
+    const d=parseJSON(await callAI(prompt,8000));
+    if(!Array.isArray(d.songs)||!d.songs.length)throw new Error('empty answer');
+    songs=d.songs;mood=d.mood||'';
+    if(d.themes&&d.themes.length){themes=d.themes.map(t=>String(t).toLowerCase());renderChips()}
+    status('');renderSongs();
+  }catch(e){
+    try{
+      if(!token){status('The AI step failed ('+e.message+'). Switching to theme search on Spotify…',true);await login('generate');$('gen').disabled=false;return}
+      status('The AI step failed ('+e.message+'). Using theme search on Spotify instead.',true);
+      songs=[];mood='Theme-based picks. Try again later for chapter-by-chapter choices.';
+      for(const t of themes.slice(0,8)){
+        const d=await sp('/search?type=track&limit=3&q='+encodeURIComponent(t));
+        d.tracks.items.forEach(x=>songs.push({title:x.name,artist:x.artists[0].name,section:t,why:'',uri:x.uri}));
+      }
+      renderSongs();
+    }catch(e2){status('Could not build the playlist: '+e2.message,true)}
+  }
+  $('gen').disabled=false;
+}
+
+function renderSongs(keep){
+  $('mood').textContent=mood;$('songs').innerHTML='';
+  let last=null;
+  songs.forEach((s,i)=>{
+    if(s.section!==last){const h=document.createElement('div');h.className='sec';const sec=s.section;
+      h.innerHTML='<span>'+esc(sec)+'</span><button class="ghost">Redo</button>';
+      h.querySelector('button').onclick=e=>regen(sec,e.target);
+      $('songs').appendChild(h);last=s.section}
+    const d=document.createElement('div');d.className='song';
+    d.innerHTML=`<div>${esc(s.title)} <small>${esc(s.artist)}${s.why?' · '+esc(s.why):''}</small></div><button aria-label="Remove song">×</button>`;
+    d.querySelector('button').onclick=()=>{songs.splice(i,1);renderSongs()};
+    $('songs').appendChild(d);
+  });
+  $('plbox').hidden=false;if(!keep)$('plbox').scrollIntoView({behavior:'smooth'});
+}
+
+$('copy').onclick=async()=>{
+  const t=`${book.title} – playlist\n`+songs.map(s=>`${s.title} – ${s.artist}`).join('\n');
+  try{await navigator.clipboard.writeText(t);$('expstatus').textContent='Copied.'}catch(e){$('expstatus').textContent='Copy failed.'}
+};
+
+async function regen(section,btn){
+  const out=$('expstatus');out.className='msg';
+  const count=songs.filter(s=>s.section===section).length||3;
+  const others=songs.filter(s=>s.section!==section).map(s=>s.title+' – '+s.artist).join('; ');
+  const old=btn.textContent;btn.disabled=true;btn.textContent='…';
+  try{
+    const prompt=`Book: "${book.title}" by ${book.author}. Themes: ${themes.join(', ')}. Reader's progress: ${$('upto').value||'not given'} (no spoilers past it).
+Suggest ${count} NEW songs for this part of the book: "${section}". Different from the existing playlist: ${others}.
+${$('inst').checked?'Prefer calm, instrumental or sparse-lyric songs that are easy to read to.':''}
+Return ONLY JSON: {"songs":[{"title":"","artist":"","why":"max 12 words"}]}. Only real, well-known songs on Spotify.`;
+    const arr=parseJSON(await callAI(prompt,1500)).songs;
+    const idx=songs.findIndex(s=>s.section===section);
+    songs=songs.filter(s=>s.section!==section);
+    songs.splice(idx,0,...arr.map(x=>({...x,section})));
+    renderSongs(true);
+  }catch(e){btn.disabled=false;btn.textContent=old;out.textContent='Could not redo that section: '+e.message;out.className='msg err'}
+}
+
+/* ---------- Spotify (PKCE, no server needed) ---------- */
+const rand=n=>[...crypto.getRandomValues(new Uint8Array(n))].map(b=>'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'[b%62]).join('');
+async function login(action){
+  const cid=SPOTIFY_CLIENT_ID||ls('cid')||$('cid').value.trim();
+  if(!cid){$('expstatus').textContent='Add your Spotify Client ID in Settings first.';$('expstatus').className='msg err';return}
+  ls('cid',cid);
+  const v=rand(64);sessionStorage.setItem('v',v);
+  sessionStorage.setItem('pending',JSON.stringify({book,themes,songs,mood,action,upto:$('upto').value}));
+  const h=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(v));
+  const c=btoa(String.fromCharCode(...new Uint8Array(h))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+  location.href='https://accounts.spotify.com/authorize?'+new URLSearchParams({client_id:cid,response_type:'code',redirect_uri:REDIRECT,scope:'playlist-modify-private playlist-modify-public',code_challenge_method:'S256',code_challenge:c});
+}
+async function sp(path,opt={}){
+  const r=await fetch('https://api.spotify.com/v1'+path,{...opt,headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'}});
+  if(r.status===401){token='';sessionStorage.removeItem('tok');throw new Error('Spotify session expired. Tap the button again to reconnect.')}
+  if(!r.ok)throw new Error('Spotify '+r.status+': '+(await r.text()).slice(0,120));
+  return r.status===204?{}:r.json();
+}
+async function callback(){
+  const code=new URLSearchParams(location.search).get('code');
+  if(!code)return;
+  history.replaceState({},'',REDIRECT);
+  try{
+    const r=await fetch('https://accounts.spotify.com/api/token',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},
+      body:new URLSearchParams({client_id:SPOTIFY_CLIENT_ID||ls('cid'),grant_type:'authorization_code',code,redirect_uri:REDIRECT,code_verifier:sessionStorage.getItem('v')})});
+    const j=await r.json();if(!j.access_token)throw new Error('no token');
+    token=j.access_token;sessionStorage.setItem('tok',token);
+    const p=JSON.parse(sessionStorage.getItem('pending')||'null');
+    if(p){book=p.book;themes=p.themes;songs=p.songs;mood=p.mood;$('upto').value=p.upto||'';
+      if(book){$('bt').textContent=book.title;$('ba').textContent='by '+book.author;$('cover').src=book.thumb;renderChips();$('bookbox').hidden=false}
+      if(songs.length)renderSongs();
+      if(p.action==='export')exportPl();else if(p.action==='generate')generate();}
+  }catch(e){status('Spotify sign-in failed. Check your Client ID and redirect URI.',true)}
+}
+
+$('exp').onclick=exportPl;
+async function exportPl(){
+  const out=$('expstatus');out.className='msg';
+  if(!token){await login('export');return}
+  $('exp').disabled=true;
+  try{
+    const uris=[];let miss=0;
+    for(let i=0;i<songs.length;i++){
+      const s=songs[i];out.textContent=`Matching songs on Spotify… ${i+1}/${songs.length}`;
+      if(s.uri){uris.push(s.uri);continue}
+      let d=await sp('/search?type=track&limit=1&q='+encodeURIComponent(`track:${s.title} artist:${s.artist}`));
+      if(!d.tracks.items.length)d=await sp('/search?type=track&limit=1&q='+encodeURIComponent(`${s.title} ${s.artist}`));
+      if(d.tracks.items.length)uris.push(d.tracks.items[0].uri);else miss++;
+    }
+    out.textContent='Creating playlist…';
+    const pl=await sp('/me/playlists',{method:'POST',body:JSON.stringify({name:`${book.title} – Bookmix`,description:`Playlist for "${book.title}" by ${book.author}. ${mood}`.slice(0,300),public:false})});
+    for(let i=0;i<uris.length;i+=100){
+      const body=JSON.stringify({uris:uris.slice(i,i+100)});
+      try{await sp(`/playlists/${pl.id}/items`,{method:'POST',body})}
+      catch(e){await sp(`/playlists/${pl.id}/tracks`,{method:'POST',body})}
+    }
+    out.innerHTML=`Saved ${uris.length} songs${miss?` (${miss} not found)`:''}. <a href="${esc(pl.external_urls.spotify)}" target="_blank" rel="noopener">Open in Spotify</a>`;
+  }catch(e){out.textContent=e.message;out.className='msg err'}
+  $('exp').disabled=false;
+}
+callback();
+</script>
+</body>
+</html>

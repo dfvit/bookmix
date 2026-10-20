@@ -122,7 +122,7 @@ code{background:var(--bg);padding:2px 6px;border-radius:5px;font-size:.82rem;wor
 <script>
 const $=id=>document.getElementById(id);
 // Paste YOUR Spotify Client ID between the quotes so visitors need no setup. It is public by design, not a secret.
-const SPOTIFY_CLIENT_ID='7300126629cf456e83e950f3d22013b1';
+const SPOTIFY_CLIENT_ID='';
 const ls=(k,v)=>{try{if(v===undefined)return localStorage.getItem(k)||'';localStorage.setItem(k,v)}catch(e){return ''}};
 const REDIRECT=location.origin+location.pathname;
 let book=null,themes=[],songs=[],mood='',token=sessionStorage.getItem('tok')||'';
@@ -206,16 +206,27 @@ async function callAI(prompt,max){
     if(!r.ok)throw new Error('Anthropic API error '+r.status);
     return (await r.json()).content.map(c=>c.text||'').join('');
   }
-  for(let a=0;a<2;a++){
-    const r=await fetch('https://text.pollinations.ai/openai',{method:'POST',headers:{'content-type':'application/json'},
-      body:JSON.stringify({model:'openai',messages:[{role:'system',content:'You are a music curator. Reply with valid JSON only.'},{role:'user',content:prompt}]})});
-    if(r.status===429&&a===0){status('The free AI is busy. Retrying in a few seconds…');await new Promise(z=>setTimeout(z,16000));continue}
-    if(!r.ok)throw new Error('free AI unavailable ('+r.status+')');
-    return (await r.json()).choices[0].message.content;
-  }
-  throw new Error('free AI is busy, try again in a minute');
+  return freeAI(prompt);
 }
-const parseJSON=t=>JSON.parse(t.slice(t.indexOf('{'),t.lastIndexOf('}')+1));
+async function freeAI(prompt){
+  const body={model:'openai',messages:[{role:'system',content:'You are a music curator. Reply with valid JSON only.'},{role:'user',content:prompt}]};
+  let last='no response';
+  for(const u of ['https://text.pollinations.ai/openai','https://text.pollinations.ai/']){
+    for(let a=0;a<2;a++){
+      let r;
+      try{r=await fetch(u,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(body)})}catch(e){last='could not reach the free AI';break}
+      if(r.status===429&&a===0){status('The free AI is busy. Retrying in a few seconds…');await new Promise(z=>setTimeout(z,16000));continue}
+      const raw=await r.text();
+      if(!r.ok){last='free AI unavailable ('+r.status+')';break}
+      let out=raw;
+      try{const j=JSON.parse(raw);const m=j.choices&&j.choices[0]&&j.choices[0].message;out=(m&&(m.content||m.reasoning_content))||(j.songs?raw:'')}catch(e){}
+      if(out&&out.indexOf('{')>-1)return out;
+      last='unexpected reply from the free AI: '+raw.slice(0,80);break;
+    }
+  }
+  throw new Error(last);
+}
+const parseJSON=t=>{t=String(t||'');const i=t.indexOf('{'),k=t.lastIndexOf('}');if(i<0||k<i)throw new Error('the AI reply was not a playlist');return JSON.parse(t.slice(i,k+1))};
 
 async function generate(){
   $('gen').disabled=true;

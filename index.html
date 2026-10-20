@@ -3,48 +3,70 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0d1620">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600&family=Fraunces:ital,wght@0,600;1,400&display=swap" rel="stylesheet">
 <title>Bookmix – a playlist for your book</title>
 <style>
-:root{--bg:#eef1f3;--card:#fff;--ink:#17222d;--mute:#5b6975;--line:#d3dae0;--acc:#8a5a00;--accbg:#f6e7c1;--btn:#17222d;--btnink:#fff}
-@media (prefers-color-scheme:dark){:root{--bg:#121b24;--card:#1b2733;--ink:#ebe6da;--mute:#9aa7b3;--line:#2c3a48;--acc:#e3bb55;--accbg:#3a3220;--btn:#e3bb55;--btnink:#17222d}}
+:root{--bg:#e9eef2;--card:#fff;--ink:#14202b;--mute:#5a6874;--line:#d3dbe2;--acc:#7a4f00;--accbg:#f3e4bd;--btn:#14202b;--btnink:#fff;--glow:rgba(227,187,85,.3);--shadow:0 1px 2px rgba(20,32,43,.06),0 10px 28px rgba(20,32,43,.08);--serif:"Fraunces","Iowan Old Style",Palatino,Georgia,serif;--sans:"DM Sans",system-ui,-apple-system,"Segoe UI",sans-serif}
+@media (prefers-color-scheme:dark){:root{--bg:#0d1620;--card:#16222d;--ink:#ece7db;--mute:#93a2b0;--line:#27384a;--acc:#e3bb55;--accbg:#352f1c;--btn:#e3bb55;--btnink:#14202b;--glow:rgba(227,187,85,.1);--shadow:0 10px 30px rgba(0,0,0,.35)}}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,Segoe UI,sans-serif}
-main{max-width:640px;margin:0 auto;padding:28px 18px 80px}
-h1,h2{font-family:Iowan Old Style,Palatino,Georgia,serif;font-weight:700;margin:0}
-h1{font-size:2.3rem;line-height:1.1}
-h2{font-size:1.25rem;margin-bottom:8px}
-.sub{color:var(--mute);margin:6px 0 24px}
-section{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px;margin-bottom:16px}
-input,select{width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);font:inherit;margin-bottom:10px}
-label{font-size:.9rem;color:var(--mute);display:block;margin-bottom:4px}
-button{font:inherit;font-weight:600;border:0;border-radius:8px;padding:11px 16px;background:var(--btn);color:var(--btnink);cursor:pointer}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg) radial-gradient(900px 520px at 88% -8%,var(--glow),transparent 62%) no-repeat;color:var(--ink);font:16px/1.55 var(--sans);counter-reset:step}
+main{max-width:640px;margin:0 auto;padding:36px 18px 90px}
+header{display:flex;align-items:center;gap:16px}
+.disc{flex:none;width:62px;height:62px;border-radius:50%;box-shadow:var(--shadow);animation:spin 16s linear infinite;
+ background:radial-gradient(circle,var(--acc) 0 11%,#0b0b0b 12% 15%,transparent 16%),conic-gradient(rgba(255,255,255,.14),transparent 22%,rgba(255,255,255,.14) 50%,transparent 72%,rgba(255,255,255,.14)),repeating-radial-gradient(circle,#161616 0 2px,#262626 2px 4px)}
+@keyframes spin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.disc{animation:none}}
+h1,h2{font-family:var(--serif);font-weight:600;margin:0;letter-spacing:-.01em}
+h1{font-size:2.7rem;line-height:1}
+h2{font-size:1.4rem;line-height:1.2;margin-bottom:6px}
+.sub{color:var(--mute);margin:10px 0 28px;font-size:1.05rem}
+section{position:relative;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px;margin-bottom:18px;box-shadow:var(--shadow)}
+section:not(.plain){counter-increment:step}
+section:not(.plain)::before{content:"Step " counter(step);display:block;font-size:.72rem;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--acc);margin-bottom:10px}
+input,select{width:100%;padding:12px 14px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);font:inherit;margin-bottom:12px;transition:border-color .15s,box-shadow .15s}
+input:focus,select:focus{outline:0;border-color:var(--acc);box-shadow:0 0 0 3px var(--accbg)}
+input[type=checkbox]{width:auto;margin:0 10px 0 0;accent-color:var(--acc)}
+label{font-size:.88rem;color:var(--mute);display:block;margin-bottom:5px}
+.chk{display:flex;align-items:center;color:var(--ink);margin-bottom:14px}
+button{font:inherit;font-weight:600;border:0;border-radius:10px;padding:12px 18px;background:var(--btn);color:var(--btnink);cursor:pointer;transition:filter .15s,transform .1s,border-color .15s}
+button:hover{filter:brightness(1.08)}button:active{transform:translateY(1px)}
+button:disabled{opacity:.5;cursor:default}
 button.ghost{background:none;color:var(--ink);border:1px solid var(--line)}
-button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+button.ghost:hover{border-color:var(--acc);filter:none}
+button:focus-visible,summary:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
 .row{display:flex;gap:8px;flex-wrap:wrap}
-.pick{display:flex;gap:12px;align-items:center;width:100%;text-align:left;background:none;color:var(--ink);border:1px solid var(--line);margin-bottom:8px;font-weight:400}
-.pick img,.cover{width:44px;height:64px;object-fit:cover;border-radius:3px;background:var(--line);flex:none}
-.pick b{display:block}.pick span{color:var(--mute);font-size:.9rem}
-.chips{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
-.chip{background:var(--accbg);color:var(--acc);border-radius:99px;padding:3px 6px 3px 12px;font-size:.88rem;font-weight:600}
-.chip button{background:none;color:inherit;padding:0 6px;font-size:1rem}
-.sec{font-family:Iowan Old Style,Palatino,Georgia,serif;font-size:1.05rem;margin:18px 0 6px;padding-bottom:4px;border-bottom:1px solid var(--line)}
-.song{display:flex;justify-content:space-between;gap:10px;padding:7px 0}
-.song small{display:block;color:var(--mute)}
-.song button{background:none;color:var(--mute);padding:0 6px}
-input[type=checkbox]{width:auto;margin:0 8px 0 0}
-.chk{display:flex;align-items:center;color:var(--ink);margin-bottom:12px}
-.sec{display:flex;justify-content:space-between;align-items:center;gap:8px}
-.sec button{font-size:.8rem;padding:3px 10px;font-family:system-ui,sans-serif}
-.msg{color:var(--mute);margin:8px 0}.err{color:#c0392b}
+.pick{display:flex;gap:14px;align-items:center;width:100%;text-align:left;background:var(--bg);color:var(--ink);border:1px solid var(--line);margin-bottom:8px;font-weight:400}
+.pick:hover{border-color:var(--acc);filter:none}
+.pick img,.cover{width:46px;height:68px;object-fit:cover;border-radius:4px;background:var(--line);flex:none;box-shadow:0 2px 8px rgba(0,0,0,.25)}
+.cover{width:56px;height:84px}
+.pick b{display:block;font-family:var(--serif);font-weight:600}.pick span{color:var(--mute);font-size:.9rem}
+.chips{display:flex;flex-wrap:wrap;gap:7px;margin:10px 0 14px}
+.chip{background:var(--accbg);color:var(--acc);border-radius:99px;padding:4px 6px 4px 13px;font-size:.86rem;font-weight:600}
+.chip button{background:none;color:inherit;padding:0 6px;font-size:1.05rem;border-radius:99px}
+#mood{font-family:var(--serif);font-style:italic;color:var(--mute);border-left:3px solid var(--acc);padding-left:12px;margin:8px 0 4px}
+.sec{display:flex;justify-content:space-between;align-items:center;gap:8px;font-family:var(--serif);font-style:italic;font-size:1.08rem;color:var(--acc);margin:24px 0 4px;padding-bottom:7px;border-bottom:1px solid var(--line)}
+.sec button{font-size:.78rem;padding:4px 12px;font-family:var(--sans);font-style:normal;border-radius:99px}
+#songs{counter-reset:t}
+.song{counter-increment:t;display:flex;align-items:center;gap:10px;padding:10px 6px;border-radius:10px}
+.song:hover{background:var(--bg)}
+.song::before{content:counter(t,decimal-leading-zero);font:.78rem ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--acc);width:24px;flex:none}
+.song>div{flex:1;font-weight:600}
+.song small{display:block;color:var(--mute);font-weight:400}
+.song button{background:none;color:var(--mute);padding:0 8px;font-size:1.1rem}
+.msg{color:var(--mute);margin:10px 0 0}.err{color:#c0392b}
 details summary{cursor:pointer;font-weight:600}
 .hint{font-size:.85rem;color:var(--mute)}
-code{background:var(--bg);padding:1px 5px;border-radius:4px;font-size:.85rem;word-break:break-all}
+code{background:var(--bg);padding:2px 6px;border-radius:5px;font-size:.82rem;word-break:break-all}
 [hidden]{display:none!important}
+@media (max-width:480px){h1{font-size:2.2rem}.disc{width:50px;height:50px}main{padding-top:26px}}
 </style>
 </head>
 <body>
 <main>
-<h1>Bookmix</h1>
+<header><div class="disc" aria-hidden="true"></div><h1>Bookmix</h1></header>
 <p class="sub">Tell it what you're reading. Get a playlist that fits the story.</p>
 
 <section>
@@ -81,7 +103,7 @@ code{background:var(--bg);padding:1px 5px;border-radius:4px;font-size:.85rem;wor
   <div id="expstatus" class="msg" role="status"></div>
 </section>
 
-<section>
+<section class="plain">
 <details>
   <summary>Settings</summary>
   <p class="hint">Bookmix works without any keys. Everything here is optional and stored only in this browser.</p>
@@ -100,7 +122,7 @@ code{background:var(--bg);padding:1px 5px;border-radius:4px;font-size:.85rem;wor
 <script>
 const $=id=>document.getElementById(id);
 // Paste YOUR Spotify Client ID between the quotes so visitors need no setup. It is public by design, not a secret.
-const SPOTIFY_CLIENT_ID='';
+const SPOTIFY_CLIENT_ID='7300126629cf456e83e950f3d22013b1';
 const ls=(k,v)=>{try{if(v===undefined)return localStorage.getItem(k)||'';localStorage.setItem(k,v)}catch(e){return ''}};
 const REDIRECT=location.origin+location.pathname;
 let book=null,themes=[],songs=[],mood='',token=sessionStorage.getItem('tok')||'';
